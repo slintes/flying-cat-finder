@@ -1,9 +1,11 @@
 package input
 
 import (
-	"flying-cat-finder/api"
 	"fmt"
+
 	"github.com/eiannone/keyboard"
+
+	"flying-cat-finder/api"
 )
 
 type Keys struct {
@@ -12,32 +14,30 @@ type Keys struct {
 }
 
 func New(commands chan<- api.Command, cancel chan interface{}) *Keys {
+	if commands == nil || cancel == nil {
+		panic("keys: args not initialized!")
+	}
 	return &Keys{
 		commands: commands,
 		cancel:   cancel,
 	}
 }
 
-func (i *Keys) Start() {
-
-	if i.commands == nil || i.cancel == nil {
-		panic("Keys fields not initialized!")
-	}
+func (k *Keys) Start() {
 
 	if err := keyboard.Open(); err != nil {
-		close(i.cancel)
+		close(k.cancel)
 		panic(err)
 	}
 
 	defer func() {
 		_ = keyboard.Close()
-		close(i.cancel)
 	}()
 
 	// interrupt reading keys when program execution is cancelled
 	go func() {
 		select {
-		case _, ok := <-i.cancel:
+		case _, ok := <-k.cancel:
 			if !ok {
 				_ = keyboard.Close()
 			}
@@ -45,41 +45,44 @@ func (i *Keys) Start() {
 	}()
 
 	fmt.Println("Press ESC to quit")
+keysLoop:
 	for {
 		char, key, err := keyboard.GetKey()
 		if err != nil {
-			break
+			fmt.Printf("keys: error: %v", err)
+			close(k.cancel)
+			break keysLoop
 		}
-		fmt.Printf("  you pressed: rune %q, key %X\r\n", char, key)
+		fmt.Printf("  keys: you pressed: rune %q, key %X\r\n", char, key)
 		switch key {
 		case keyboard.KeyEsc, keyboard.KeyCtrlC:
-			close(i.cancel)
+			close(k.cancel)
+			break keysLoop
 		case keyboard.KeyPgup:
-			i.commands <- api.TakeOff
+			k.commands <- api.TakeOff
 		case keyboard.KeyPgdn:
-			i.commands <- api.Land
+			k.commands <- api.Land
 		case keyboard.KeySpace:
-			i.commands <- api.Hover
+			k.commands <- api.Hover
 		case keyboard.KeyArrowLeft:
-			i.commands <- api.TurnLeft
+			k.commands <- api.TurnLeft
 		case keyboard.KeyArrowRight:
-			i.commands <- api.TurnRight
+			k.commands <- api.TurnRight
 		case keyboard.KeyArrowUp:
-			i.commands <- api.MoveUp
+			k.commands <- api.MoveUp
 		case keyboard.KeyArrowDown:
-			i.commands <- api.MoveDown
+			k.commands <- api.MoveDown
 		}
 		switch char {
 		case 'a':
-			i.commands <- api.MoveLeft
+			k.commands <- api.MoveLeft
 		case 'd':
-			i.commands <- api.MoveRight
+			k.commands <- api.MoveRight
 		case 'w':
-			i.commands <- api.MoveForward
+			k.commands <- api.MoveForward
 		case 's':
-			i.commands <- api.MoveBackwards
+			k.commands <- api.MoveBackwards
 		}
 	}
-	fmt.Println("keyboard closed!")
-	close(i.cancel)
+	fmt.Println("keys: leaving loop!")
 }
