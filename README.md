@@ -6,8 +6,7 @@ This is a fun project, aiming at using Golang for steering a Ryze Tello Drone an
 
 - https://www.ryzerobotics.com/tello  
 - https://gobot.io/documentation/platforms/tello/  
-- more to come
-
+- https://gocv.io/
 
 ## License
 

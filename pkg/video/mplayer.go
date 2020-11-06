@@ -10,7 +10,7 @@ type mPlayer struct {
 	cancel chan interface{}
 }
 
-func New(data <-chan []byte, cancel chan interface{}) *mPlayer {
+func NewPlayer(data <-chan []byte, cancel chan interface{}) *mPlayer {
 	if data == nil || cancel == nil {
 		panic("mplayer: args not initialized!")
 	}

@@ -15,7 +15,8 @@ func main() {
 	cancelChan := make(chan interface{}, 1)
 
 	in := input.New(commandsChan, cancelChan)
-	vid := video.New(videoChan, cancelChan)
+	//vid := video.NewPlayer(videoChan, cancelChan)
+	vid := video.NewTracker(videoChan, cancelChan)
 	dr := drone.New(commandsChan, videoChan, cancelChan)
 
 	go func() {
